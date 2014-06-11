@@ -1,6 +1,6 @@
 require.config({
 	paths : {
-		'jquery' : 'vendor/jquery'	
+		'jquery' : 'vendor/jquery'
 	}
 });
 
@@ -11,12 +11,23 @@ define("main",['jquery'],function($){
 	var containerHeight = $(window).height();
 	var height = parseInt(containerHeight / div);
 	var width = parseInt(containerWidth / div);
-	
+
+	var fx = {
+		average_n : 1,
+		average_ne : 0,
+		average_e : 1,
+		average_se : 0,
+		average_s : 1,
+		average_sw : 0,
+		average_w : 0,
+		average_nw : 0
+	};
+
 	var $canvas = $("<canvas>")
 		.attr({width:width,height:height})
 		// .css({width : containerWidth + "px",height : containerHeight + "px"})
 		.appendTo("body");
-	var canvas = $canvas.get(0);	
+	var canvas = $canvas.get(0);
 	var context = canvas.getContext("2d");
 	var pixels = {};
 	var pixeldata; //  = context.getImageData(0,0,width,height);
@@ -59,28 +70,45 @@ define("main",['jquery'],function($){
 				var b = pixel.b;// * .95;
 				var a = 255;
 
-				var n = getPixel(x,y-1);
-				var e = getPixel(x+1,y);
-				var s = getPixel(x,y+1);
-				var w = getPixel(x-1,y);
+				if (fx.average_n) {
+					var n = getPixel(x,y-1);
+					averagePixels(n,pixel);
+				}
 
-				averagePixels(n,pixel);
-				averagePixels(e,pixel);
-				averagePixels(s,pixel);
-				averagePixels(w,pixel);
+				if (fx.average_e > 0) {
+					var e = getPixel(x+1,y);
+					averagePixels(e,pixel);
+				}
 
-				/*
-				var nw = getPixel(x-1,y-1);
-				var ne = getPixel(x+1,y-1);
-				var se = getPixel(x+1,y+1);
-				var sw = getPixel(x-1,y+1);
+				if (fx.average_s > 0) {
+					var s = getPixel(x,y+1);
+					averagePixels(s,pixel);
+				}
 
-				averagePixels(nw,pixel);
-				averagePixels(ne,pixel);
-				averagePixels(se,pixel);
-				averagePixels(sw,pixel);
-				*/
+				if (fx.average_w > 0) {
+					var w = getPixel(x-1,y);
+					averagePixels(w,pixel);
+				}
 
+				if (fx.average_nw > 0) {
+					var nw = getPixel(x-1,y-1);
+					averagePixels(nw,pixel);
+				}
+
+				if (fx.average_ne > 0) {
+					var ne = getPixel(x+1,y-1);
+					averagePixels(ne,pixel);
+				}
+
+				if (fx.average_se > 0) {
+					var se = getPixel(x+1,y+1);
+					averagePixels(se,pixel);
+				}
+
+				if (fx.average_sw > 0) {
+					var sw = getPixel(x-1,y+1);
+					averagePixels(sw,pixel);
+				}
 
 				setPixel(x,y,r,g,b);
 
@@ -119,7 +147,7 @@ define("main",['jquery'],function($){
 	}
 
 	$(function(){
-	
+
 		cleanSlate();
 		loop();
 
@@ -130,14 +158,17 @@ define("main",['jquery'],function($){
 				var x = parseInt(e.clientX / div);
 				var y = parseInt(e.clientY / div);
 				if (x < width && y < height && x>= 0 && y >= 0) {
-					setPixel(x,y,
+					setPixel(
+						x,
+						y,
 						Math.floor( Math.random() * 255),
 						Math.floor( Math.random() * 255),
 						Math.floor( Math.random() * 255),
-						255);
+						255
+					);
 				}
 			});
-		
+
 	});
 
 });
