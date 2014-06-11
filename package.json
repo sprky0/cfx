@@ -1,0 +1,8 @@
+{
+  "name": "canvas-fun",
+  "private": true,
+  "devDependencies": {
+    "connect": "^2.19.3",
+    "bower": "^1.3.4"
+  }
+}
