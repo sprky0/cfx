@@ -11,13 +11,13 @@ define("main",['jquery'],function($){
 	var containerHeight = $(window).height();
 	var height = parseInt(containerHeight / div);
 	var width = parseInt(containerWidth / div);
-
+	var loopCount = 0;
 	var fx = {
 		average_n : 1,
 		average_ne : 0,
-		average_e : 1,
+		average_e : 0,
 		average_se : 0,
-		average_s : 1,
+		average_s : 0,
 		average_sw : 0,
 		average_w : 0,
 		average_nw : 0
@@ -31,6 +31,11 @@ define("main",['jquery'],function($){
 	var context = canvas.getContext("2d");
 	var pixels = {};
 	var pixeldata; //  = context.getImageData(0,0,width,height);
+	var palette = [];
+
+	function getRandomColor() {
+		return palette[Math.floor(Math.random() * palette.length)];
+	}
 
 	function getPixel(x,y) {
 		if (!pixels[x+"_"+y])
@@ -60,6 +65,13 @@ define("main",['jquery'],function($){
 	}
 
 	function loop() {
+
+		loopCount++;
+
+		if (loopCount > 60) {
+			chaos();
+			loopCount = 0;
+		}
 
 		for(var y = 0; y < height; y++) {
 			for(var x = 0; x < width; x++) {
@@ -124,6 +136,21 @@ define("main",['jquery'],function($){
 
 	}
 
+	function chaos() {
+
+		fx.average_n = Math.random() > .3 ? 0 : 1;
+		fx.average_ne = Math.random() > .3 ? 0 : 1;
+		fx.average_e = Math.random() > .3 ? 0 : 1;
+		fx.average_se = Math.random() > .3 ? 0 : 1;
+		fx.average_s = Math.random() > .3 ? 0 : 1;
+		fx.average_sw = Math.random() > .3 ? 0 : 1;
+		fx.average_w = Math.random() > .3 ? 0 : 1;
+		fx.average_nw = Math.random() > .3? 0 : 1;
+
+		fillEdges();
+
+	}
+
 	function cleanSlate() {
 
 		context.fillStyle = "rgb(0, 0, 0)";
@@ -131,12 +158,22 @@ define("main",['jquery'],function($){
 
 		pixeldata = context.getImageData(0,0,width,height);
 
+		palette = [];
+
+		for(var i = 0; i < 4; i++) {
+			palette.push({
+				r : Math.random() * 255,
+				g : Math.random() * 255,
+				b : Math.random() * 255
+			});
+		}
+
 		for(var x = 0; x < width; x++) {
 			for(var y = 0; y < height; y++) {
 				var base = {
-					r : Math.floor( Math.random() * 255),
-					g : Math.floor( Math.random() * 255),
-					b : Math.floor( Math.random() * 255),
+					r : 0,//Math.floor( Math.random() * 255),
+					g : 0,//Math.floor( Math.random() * 255),
+					b : 0,//Math.floor( Math.random() * 255),
 					a : 255,
 					x : x,
 					y : y
@@ -146,6 +183,59 @@ define("main",['jquery'],function($){
 		}
 	}
 
+	function fillEdges() {
+
+		for(var x = 0; x < width; x++) {
+			var y = 0;
+			var color = getRandomColor();
+			var base = {
+				r : color.r,
+				g : color.g,
+				b : color.b,
+				a : 255,
+				x : x,
+				y : y
+			};
+			pixels[x+"_"+y] = base;
+			var y = height - 1;
+			var color = getRandomColor();
+			var base = {
+				r : color.r,
+				g : color.g,
+				b : color.b,
+				a : 255,
+				x : x,
+				y : y
+			};
+			pixels[x+"_"+y] = base;
+		}
+		for(var y = 0; y < height; y++) {
+			var x = 0;
+			var color = getRandomColor();
+			var base = {
+				r : color.r,
+				g : color.g,
+				b : color.b,
+				a : 255,
+				x : x,
+				y : y
+			};
+			pixels[x+"_"+y] = base;
+			var x = width - 1;
+			var color = getRandomColor();
+			var base = {
+				r : color.r,
+				g : color.g,
+				b : color.b,
+				a : 255,
+				x : x,
+				y : y
+			};
+			pixels[x+"_"+y] = base;
+		}
+
+	}
+
 	$(function(){
 
 		cleanSlate();
@@ -153,6 +243,7 @@ define("main",['jquery'],function($){
 
 		setInterval(loop, 1000 / 60);
 
+		/*
 		$(document)
 			.on("mousemove",function(e){
 				var x = parseInt(e.clientX / div);
@@ -168,6 +259,12 @@ define("main",['jquery'],function($){
 					);
 				}
 			});
+			*/
+
+		$(document).on("click", function() {
+			fillEdges();
+		});
+
 
 	});
 
