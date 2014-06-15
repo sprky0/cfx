@@ -265,6 +265,42 @@ define("main",['jquery'],function($){
 			fillEdges();
 		});
 
+		var c_edges = {
+			n  : [containerWidth / 2,0],
+			ne : [containerWidth, 0],
+			e  : [containerWidth, containerHeight / 2],
+			se : [containerWidth, containerHeight],
+			s  : [containerWidth / 2, containerHeight],
+			sw : [0, containerHeight],
+			w  : [0, containerHeight / 2],
+			nw : [0,0]
+		};
+
+		var c_middle = [containerWidth / 2, containerHeight / 2];
+
+		function getSquare(n) {
+			return n * n;
+		}
+
+		function getDistance(x1,y1,x2,y2) {
+			return Math.sqrt( Math.abs( getSquare(x2 - x1) - getSquare( y2 - y1) ) );
+		}
+
+		$(document).on("mousemove", function(e) {
+				var x = e.clientX;
+				var y = e.clientY;
+				for(var i in c_edges) {
+					var distance = getDistance(c_edges[i][0],c_edges[i][1],x,y);
+
+					context.moveTo(c_edges[i][0] / div,c_edges[i][1] / div);
+					context.lineTo(x / div,y / div);
+					context.lineTo(c_middle[0] / div,c_middle[1] / div);
+					context.stroke();
+
+					$("#_" + i).empty().append( distance || "?" );
+				}
+		});
+
 
 	});
 
