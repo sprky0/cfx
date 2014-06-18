@@ -4,7 +4,7 @@ require.config({
 	}
 });
 
-define("main",['jquery'],function($){
+define("main",['jquery','windrose'],function($,windrose){
 
 	var div = 20;
 	var containerWidth = $(window).width();
@@ -13,24 +13,25 @@ define("main",['jquery'],function($){
 	var width = parseInt(containerWidth / div);
 	var loopCount = 0;
 	var fx = {
-		average_n : 1,
-		average_ne : 0,
-		average_e : 0,
-		average_se : 0,
-		average_s : 0,
-		average_sw : 0,
-		average_w : 0,
-		average_nw : 0
+		average : {
+			n : 1,
+			ne : 0,
+			e : 0,
+			se : 0,
+			s : 0,
+			sw : 0,
+			w : 0,
+			nw : 0
+		}
 	};
 
 	var $canvas = $("<canvas>")
 		.attr({width:width,height:height})
-		// .css({width : containerWidth + "px",height : containerHeight + "px"})
 		.appendTo("body");
 	var canvas = $canvas.get(0);
 	var context = canvas.getContext("2d");
 	var pixels = {};
-	var pixeldata; //  = context.getImageData(0,0,width,height);
+	var pixeldata;
 	var palette = [];
 
 	function getRandomColor() {
@@ -54,13 +55,27 @@ define("main",['jquery'],function($){
 		};
 	}
 
-	function averagePixels(p1,p2) {
-		if (p1 && p2 && Math.random() < .4) {
-			var r = (p1.r + p2.r) / 2;
-			var g = (p1.g + p2.g) / 2;
-			var b = (p1.b + p2.b) / 2;
-			setPixel(p1.x,p1.y,r,g,b);
-			setPixel(p2.x,p2.y,r,g,b);
+	function inverseAveragePixels(p1,p2,weight) {
+		return averagePixels(p1,p2,1-weight);
+	}
+
+	function averagePixels(p1,p2,weight) {
+		if (p1 && p2) {
+
+			var p1_weight = weight || .8;
+			var p2_weight = 1 - p1_weight;
+
+			var r1 = p1.r * p1_weight + p2.r * p2_weight;
+			var g1 = p1.g * p1_weight + p2.g * p2_weight;
+			var b1 = p1.b * p1_weight + p2.b * p2_weight;
+
+			var r2 = p1.r * p2_weight + p2.r * p1_weight;
+			var g2 = p1.g * p2_weight + p2.g * p1_weight;
+			var b2 = p1.b * p2_weight + p2.b * p1_weight;
+
+			setPixel(p1.x,p1.y,r1,g1,b1);
+			setPixel(p2.x,p2.y,r2,g2,b2);
+
 		}
 	}
 
@@ -77,49 +92,49 @@ define("main",['jquery'],function($){
 			for(var x = 0; x < width; x++) {
 				var pixel = getPixel(x,y);
 
-				var r = pixel.r;// * .95;
-				var g = pixel.g;// * .95;
-				var b = pixel.b;// * .95;
+				var r = pixel.r;
+				var g = pixel.g;
+				var b = pixel.b;
 				var a = 255;
 
-				if (fx.average_n) {
+				if (fx.average.n) {
 					var n = getPixel(x,y-1);
-					averagePixels(n,pixel);
+					inverseAveragePixels(n,pixel,fx.average.n);
 				}
 
-				if (fx.average_e > 0) {
+				if (fx.average.e > 0) {
 					var e = getPixel(x+1,y);
-					averagePixels(e,pixel);
+					inverseAveragePixels(e,pixel,fx.average.e);
 				}
 
-				if (fx.average_s > 0) {
+				if (fx.average.s > 0) {
 					var s = getPixel(x,y+1);
-					averagePixels(s,pixel);
+					inverseAveragePixels(s,pixel,fx.average.s);
 				}
 
-				if (fx.average_w > 0) {
+				if (fx.average.w > 0) {
 					var w = getPixel(x-1,y);
-					averagePixels(w,pixel);
+					inverseAveragePixels(w,pixel,fx.average.w);
 				}
 
-				if (fx.average_nw > 0) {
+				if (fx.average.nw > 0) {
 					var nw = getPixel(x-1,y-1);
-					averagePixels(nw,pixel);
+					inverseAveragePixels(nw,pixel,fx.average.nw);
 				}
 
-				if (fx.average_ne > 0) {
+				if (fx.average.ne > 0) {
 					var ne = getPixel(x+1,y-1);
-					averagePixels(ne,pixel);
+					inverseAveragePixels(ne,pixel,fx.average.ne);
 				}
 
-				if (fx.average_se > 0) {
+				if (fx.average.se > 0) {
 					var se = getPixel(x+1,y+1);
-					averagePixels(se,pixel);
+					inverseAveragePixels(se,pixel,fx.average.se);
 				}
 
-				if (fx.average_sw > 0) {
+				if (fx.average.sw > 0) {
 					var sw = getPixel(x-1,y+1);
-					averagePixels(sw,pixel);
+					inverseAveragePixels(sw,pixel,fx.average.sw);
 				}
 
 				setPixel(x,y,r,g,b);
@@ -138,15 +153,7 @@ define("main",['jquery'],function($){
 
 	function chaos() {
 
-		fx.average_n = Math.random() > .3 ? 0 : 1;
-		fx.average_ne = Math.random() > .3 ? 0 : 1;
-		fx.average_e = Math.random() > .3 ? 0 : 1;
-		fx.average_se = Math.random() > .3 ? 0 : 1;
-		fx.average_s = Math.random() > .3 ? 0 : 1;
-		fx.average_sw = Math.random() > .3 ? 0 : 1;
-		fx.average_w = Math.random() > .3 ? 0 : 1;
-		fx.average_nw = Math.random() > .3? 0 : 1;
-
+		// put some crap in so we have image data to work with
 		fillEdges();
 
 	}
@@ -171,9 +178,9 @@ define("main",['jquery'],function($){
 		for(var x = 0; x < width; x++) {
 			for(var y = 0; y < height; y++) {
 				var base = {
-					r : 0,//Math.floor( Math.random() * 255),
-					g : 0,//Math.floor( Math.random() * 255),
-					b : 0,//Math.floor( Math.random() * 255),
+					r : 0,
+					g : 0,
+					b : 0,
 					a : 255,
 					x : x,
 					y : y
@@ -243,64 +250,18 @@ define("main",['jquery'],function($){
 
 		setInterval(loop, 1000 / 60);
 
-		/*
-		$(document)
-			.on("mousemove",function(e){
-				var x = parseInt(e.clientX / div);
-				var y = parseInt(e.clientY / div);
-				if (x < width && y < height && x>= 0 && y >= 0) {
-					setPixel(
-						x,
-						y,
-						Math.floor( Math.random() * 255),
-						Math.floor( Math.random() * 255),
-						Math.floor( Math.random() * 255),
-						255
-					);
-				}
-			});
-			*/
-
 		$(document).on("click", function() {
 			fillEdges();
 		});
 
-		var c_edges = {
-			n  : [containerWidth / 2,0],
-			ne : [containerWidth, 0],
-			e  : [containerWidth, containerHeight / 2],
-			se : [containerWidth, containerHeight],
-			s  : [containerWidth / 2, containerHeight],
-			sw : [0, containerHeight],
-			w  : [0, containerHeight / 2],
-			nw : [0,0]
-		};
-
-		var c_middle = [containerWidth / 2, containerHeight / 2];
-
-		function getSquare(n) {
-			return n * n;
-		}
-
-		function getDistance(x1,y1,x2,y2) {
-			return Math.sqrt( Math.abs( getSquare(x2 - x1) - getSquare( y2 - y1) ) );
-		}
-
-		$(document).on("mousemove", function(e) {
-				var x = e.clientX;
-				var y = e.clientY;
-				for(var i in c_edges) {
-					var distance = getDistance(c_edges[i][0],c_edges[i][1],x,y);
-
-					context.moveTo(c_edges[i][0] / div,c_edges[i][1] / div);
-					context.lineTo(x / div,y / div);
-					context.lineTo(c_middle[0] / div,c_middle[1] / div);
-					context.stroke();
-
-					$("#_" + i).empty().append( distance || "?" );
+		var w = windrose(document);
+		w.on("update",function(meta){
+			for(var i in fx.average) {
+				if (meta.rose[i]) {
+					fx.average[i] = meta.rose[i] > 0.1 ? meta.rose[i] : 0;
 				}
+			}
 		});
-
 
 	});
 
